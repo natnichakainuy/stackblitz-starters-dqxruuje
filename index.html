@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Make or Buy Analysis | นักบัญชีบริหาร</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --primary: #1a3a5c;
+        --secondary: #2e6da4;
+        --accent: #e8a020;
+        --make: #2196f3;
+        --buy: #e91e63;
+        --green: #4caf50;
+        --bg: #f0f4f8;
+        --card: #ffffff;
+        --text: #1a2535;
+        --muted: #6b7a8d;
+      }
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 14px;
+      }
+      header {
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--secondary) 100%
+        );
+        color: white;
+        padding: 20px 32px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+      }
+      header .icon {
+        font-size: 2.4rem;
+      }
+      header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+      header p {
+        font-size: 0.85rem;
+        opacity: 0.85;
+        margin-top: 2px;
+      }
+      .badge {
+        background: var(--accent);
+        color: white;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        margin-left: 10px;
+      }
+
+      .main {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 20px;
+        padding: 24px 32px;
+        max-width: 1600px;
+        margin: 0 auto;
+      }
+
+      .panel {
+        background: var(--card);
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+        overflow: hidden;
+      }
+      .panel-header {
+        padding: 14px 20px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        border-bottom: 2px solid var(--bg);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .panel-header.blue {
+        background: linear-gradient(90deg, #e3f0fb, #f8fbff);
+        color: var(--secondary);
+        border-bottom-color: #c5ddf5;
+      }
+      .panel-header.pink {
+        background: linear-gradient(90deg, #fde8f0, #fff8fb);
+        color: var(--buy);
+        border-bottom-color: #f7c0d5;
+      }
+      .panel-header.purple {
+        background: linear-gradient(90deg, #ede7f6, #f9f6ff);
+        color: #7b1fa2;
+        border-bottom-color: #d1c4e9;
+      }
+      .panel-header.gold {
+        background: linear-gradient(90deg, #fff8e1, #fffdf5);
+        color: #e65100;
+        border-bottom-color: #ffe082;
+      }
+      .panel-body {
+        padding: 18px 20px;
+      }
+
+      .section-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--muted);
+        margin: 14px 0 8px;
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .form-group label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .form-group input {
+        border: 1.5px solid #dde3ea;
+        border-radius: 7px;
+        padding: 7px 11px;
+        font-size: 0.88rem;
+        transition: border 0.2s;
+        width: 100%;
+      }
+      .form-group input:focus {
+        outline: none;
+        border-color: var(--secondary);
+      }
+      .form-group.full {
+        grid-column: 1/-1;
+      }
+
+      .cost-block {
+        border-radius: 9px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+      }
+      .cost-block.make-block {
+        background: #e8f4fd;
+        border: 1.5px solid #90caf9;
+      }
+      .cost-block.buy-block {
+        background: #fde8f0;
+        border: 1.5px solid #f48fb1;
+      }
+      .cost-block h4 {
+        font-size: 0.82rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .cost-block h4.make {
+        color: var(--make);
+      }
+      .cost-block h4.buy {
+        color: var(--buy);
+      }
+
+      .btn {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 6px;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--secondary), var(--primary));
+        color: white;
+        box-shadow: 0 3px 10px rgba(46, 109, 164, 0.3);
+      }
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 16px rgba(46, 109, 164, 0.4);
+      }
+      .btn-reset {
+        background: #f5f5f5;
+        color: var(--muted);
+        font-size: 0.82rem;
+        margin-top: 8px;
+      }
+
+      /* RIGHT SIDE */
+      .right-col {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      /* RESULT CARD */
+      .result-banner {
+        border-radius: 12px;
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
+      }
+      .result-banner.make-win {
+        background: linear-gradient(135deg, #1565c0, #1976d2);
+        color: white;
+      }
+      .result-banner.buy-win {
+        background: linear-gradient(135deg, #880e4f, #c2185b);
+        color: white;
+      }
+      .result-banner.tie {
+        background: linear-gradient(135deg, #37474f, #546e7a);
+        color: white;
+      }
+      .result-banner .verdict {
+        font-size: 2rem;
+        font-weight: 800;
+      }
+      .result-banner .sub {
+        font-size: 0.85rem;
+        opacity: 0.9;
+      }
+      .result-banner .saving {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        padding: 10px 16px;
+        text-align: center;
+        min-width: 140px;
+      }
+      .result-banner .saving .amt {
+        font-size: 1.3rem;
+        font-weight: 800;
+      }
+      .result-banner .saving .lbl {
+        font-size: 0.72rem;
+        opacity: 0.85;
+      }
+
+      /* METRICS */
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .metric-card {
+        border-radius: 10px;
+        padding: 14px 16px;
+        text-align: center;
+      }
+      .metric-card.m1 {
+        background: #e3f2fd;
+      }
+      .metric-card.m2 {
+        background: #fce4ec;
+      }
+      .metric-card.m3 {
+        background: #f3e5f5;
+      }
+      .metric-card.m4 {
+        background: #e8f5e9;
+      }
+      .metric-val {
+        font-size: 1.3rem;
+        font-weight: 800;
+      }
+      .metric-val.make {
+        color: var(--make);
+      }
+      .metric-val.buy {
+        color: var(--buy);
+      }
+      .metric-val.purple {
+        color: #7b1fa2;
+      }
+      .metric-val.green {
+        color: #388e3c;
+      }
+      .metric-lbl {
+        font-size: 0.72rem;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+
+      /* CHARTS */
+      .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+      }
+      .chart-box {
+        background: var(--card);
+        border-radius: 10px;
+        padding: 14px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      .chart-box h4 {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--muted);
+        margin-bottom: 10px;
+        text-align: center;
+      }
+      .chart-box canvas {
+        max-height: 200px;
+      }
+
+      /* COST TABLE */
+      .cost-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+      }
+      .cost-table th {
+        background: #f5f7fa;
+        padding: 8px 12px;
+        text-align: left;
+        font-weight: 700;
+        color: var(--muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+      }
+      .cost-table td {
+        padding: 7px 12px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .cost-table tr:last-child td {
+        border-bottom: none;
+        font-weight: 700;
+        background: #fafafa;
+      }
+      .cost-table .make-c {
+        color: var(--make);
+        font-weight: 600;
+      }
+      .cost-table .buy-c {
+        color: var(--buy);
+        font-weight: 600;
+      }
+      .tag-relevant {
+        background: #e8f5e9;
+        color: #388e3c;
+        padding: 1px 7px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 700;
+      }
+      .tag-irrelevant {
+        background: #f5f5f5;
+        color: #9e9e9e;
+        padding: 1px 7px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+      }
+
+      /* STRATEGIC */
+      .strategic-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .criteria-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+      }
+      .criteria-table th {
+        background: #f5f7fa;
+        padding: 7px 10px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .criteria-table td {
+        padding: 6px 10px;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+      }
+      .criteria-table input[type='range'] {
+        width: 100%;
+        accent-color: var(--secondary);
+      }
+      .criteria-table select {
+        border: 1px solid #dde3ea;
+        border-radius: 5px;
+        padding: 3px 6px;
+        font-size: 0.8rem;
+      }
+      .score-bar {
+        height: 8px;
+        border-radius: 4px;
+        background: #f0f0f0;
+        overflow: hidden;
+        margin-top: 3px;
+      }
+      .score-fill-make {
+        height: 100%;
+        background: var(--make);
+        border-radius: 4px;
+        transition: width 0.4s;
+      }
+      .score-fill-buy {
+        height: 100%;
+        background: var(--buy);
+        border-radius: 4px;
+        transition: width 0.4s;
+      }
+      .score-result {
+        border-radius: 10px;
+        padding: 16px;
+        text-align: center;
+      }
+      .score-result.make-score {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+      }
+      .score-result.buy-score {
+        background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+      }
+      .score-result .big {
+        font-size: 2rem;
+        font-weight: 800;
+      }
+      .score-result.make-score .big {
+        color: var(--make);
+      }
+      .score-result.buy-score .big {
+        color: var(--buy);
+      }
+
+      .sensitivity-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.78rem;
+      }
+      .sensitivity-table th {
+        background: #f5f7fa;
+        padding: 7px 10px;
+        font-weight: 700;
+        color: var(--muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+      }
+      .sensitivity-table td {
+        padding: 5px 10px;
+        border-bottom: 1px solid #f5f5f5;
+        text-align: center;
+      }
+      .sensitivity-table .col-vol {
+        font-weight: 600;
+      }
+      .hl-best {
+        background: #e8f5e9 !important;
+        color: #388e3c;
+        font-weight: 700;
+      }
+
+      .recommendation-box {
+        border-radius: 10px;
+        padding: 16px;
+        border-left: 4px solid;
+      }
+      .recommendation-box.make-rec {
+        background: #e3f2fd;
+        border-color: var(--make);
+      }
+      .recommendation-box.buy-rec {
+        background: #fce4ec;
+        border-color: var(--buy);
+      }
+      .recommendation-box h4 {
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+      }
+      .recommendation-box ul {
+        padding-left: 18px;
+        font-size: 0.82rem;
+        color: #444;
+        line-height: 1.7;
+      }
+
+      .placeholder {
+        text-align: center;
+        color: var(--muted);
+        padding: 40px;
+        font-size: 0.9rem;
+      }
+      .placeholder .big-icon {
+        font-size: 3rem;
+      }
+
+      @media (max-width: 1200px) {
+        .main {
+          grid-template-columns: 1fr;
+        }
+        .charts-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .metrics-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="icon">📊</div>
+      <div>
+        <h1>
+          Make or Buy Analysis <span class="badge">MANAGEMENT ACCOUNTING</span>
+        </h1>
+        <p>
+          โปรแกรมวิเคราะห์การตัดสินใจทำเองหรือซื้อภายนอก
+          พร้อมต้นทุนที่เกี่ยวข้อง กราฟ และการวิเคราะห์เชิงกลยุทธ์
+        </p>
+      </div>
+    </header>
+
+    <div class="main">
+      <!-- LEFT: INPUT -->
+      <div>
+        <div class="panel">
+          <div class="panel-header blue">⚙️ ข้อมูลการผลิต / Volume</div>
+          <div class="panel-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label>ชื่อชิ้นส่วน / สินค้า</label>
+                <input type="text" id="productName" value="ชิ้นส่วน A" />
+              </div>
+              <div class="form-group">
+                <label>ปริมาณผลิต (หน่วย/ปี)</label>
+                <input type="number" id="volume" value="50000" min="1" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <br />
+        <div class="panel">
+          <div class="panel-header blue">🏭 ต้นทุนการผลิตเอง (Make)</div>
+          <div class="panel-body">
+            <div class="section-title">ต้นทุนผันแปร (Variable Cost)</div>
+            <div class="cost-block make-block">
+              <h4 class="make">🔧 ต้นทุนแปรผัน</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>วัตถุดิบทางตรง (บ./หน่วย)</label>
+                  <input
+                    type="number"
+                    id="m_directMat"
+                    value="45"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>แรงงานทางตรง (บ./หน่วย)</label>
+                  <input
+                    type="number"
+                    id="m_directLabor"
+                    value="30"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>โอเวอร์เฮดผันแปร (บ./หน่วย)</label>
+                  <input
+                    type="number"
+                    id="m_varOverhead"
+                    value="15"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>ต้นทุนผันแปรอื่น (บ./หน่วย)</label>
+                  <input
+                    type="number"
+                    id="m_varOther"
+                    value="5"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="section-title">ต้นทุนคงที่ (Fixed Cost)</div>
+            <div class="cost-block make-block">
+              <h4 class="make">🏗️ ต้นทุนคงที่</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>ค่าเสื่อมราคา (บ./ปี)</label>
+                  <input
+                    type="number"
+                    id="m_depreciation"
+                    value="500000"
+                    min="0"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>ค่าเช่า/สาธารณูปโภค (บ./ปี)</label>
+                  <input type="number" id="m_rent" value="300000" min="0" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>เงินเดือน (Avoidable) (บ./ปี)</label>
+                  <input
+                    type="number"
+                    id="m_fixedLabor"
+                    value="400000"
+                    min="0"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>ต้นทุนคงที่อื่น (Avoidable) (บ./ปี)</label>
+                  <input
+                    type="number"
+                    id="m_fixedOther"
+                    value="100000"
+                    min="0"
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group full">
+                  <label
+                    >ต้นทุนคงที่ที่หลีกเลี่ยงไม่ได้ (Unavoidable) (บ./ปี)</label
+                  >
+                  <input
+                    type="number"
+                    id="m_unavoidable"
+                    value="200000"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="section-title">ต้นทุนค่าเสียโอกาส</div>
+            <div class="form-row">
+              <div class="form-group full">
+                <label
+                  >Opportunity Cost (บ./ปี) —
+                  ถ้าใช้พื้นที่/ทรัพยากรในทางอื่น</label
+                >
+                <input type="number" id="m_opCost" value="150000" min="0" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <br />
+        <div class="panel">
+          <div class="panel-header pink">🛒 ต้นทุนการซื้อภายนอก (Buy)</div>
+          <div class="panel-body">
+            <div class="cost-block buy-block">
+              <h4 class="buy">💰 ราคาซื้อและต้นทุนเพิ่มเติม</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>ราคาซื้อจากซัพพลายเออร์ (บ./หน่วย)</label>
+                  <input
+                    type="number"
+                    id="b_unitPrice"
+                    value="120"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>ค่าขนส่ง/จัดส่ง (บ./หน่วย)</label>
+                  <input
+                    type="number"
+                    id="b_freight"
+                    value="5"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>ต้นทุนการตรวจรับ (บ./หน่วย)</label>
+                  <input
+                    type="number"
+                    id="b_inspection"
+                    value="2"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>ต้นทุนการจัดการ (บ./หน่วย)</label>
+                  <input
+                    type="number"
+                    id="b_handling"
+                    value="3"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>ต้นทุนคงที่ที่ยังคงอยู่ (บ./ปี)</label>
+                  <input
+                    type="number"
+                    id="b_fixedRemain"
+                    value="200000"
+                    min="0"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Savings หากเลิกผลิต (บ./ปี)</label>
+                  <input type="number" id="b_savings" value="50000" min="0" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <br />
+        <button class="btn btn-primary" onclick="calculate()">
+          🔍 วิเคราะห์ Make or Buy
+        </button>
+        <button class="btn btn-reset" onclick="resetForm()">
+          ↺ รีเซ็ตข้อมูล
+        </button>
+      </div>
+
+      <!-- RIGHT: RESULTS -->
+      <div class="right-col" id="rightCol">
+        <div class="panel" style="padding: 40px; text-align: center">
+          <div class="placeholder">
+            <div class="big-icon">📋</div>
+            <p style="margin-top: 12px; font-weight: 600; color: #1a3a5c">
+              กรอกข้อมูลและกด "วิเคราะห์ Make or Buy"
+            </p>
+            <p style="margin-top: 6px; font-size: 0.8rem">
+              ระบบจะแสดงผลการวิเคราะห์ต้นทุน กราฟ และคำแนะนำเชิงกลยุทธ์
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let charts = {};
+
+      function fmt(n) {
+        return n.toLocaleString('th-TH', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      }
+      function fmtInt(n) {
+        return Math.round(n).toLocaleString('th-TH');
+      }
+
+      function val(id) {
+        return parseFloat(document.getElementById(id).value) || 0;
+      }
+
+      function calculate() {
+        const vol = val('volume');
+        const name = document.getElementById('productName').value || 'ชิ้นส่วน';
+
+        // MAKE costs
+        const m_varUnit =
+          val('m_directMat') +
+          val('m_directLabor') +
+          val('m_varOverhead') +
+          val('m_varOther');
+        const m_varTotal = m_varUnit * vol;
+        const m_fixedAvoidable = val('m_fixedLabor') + val('m_fixedOther');
+        const m_fixedTotal =
+          val('m_depreciation') +
+          val('m_rent') +
+          m_fixedAvoidable +
+          val('m_unavoidable');
+        const m_opCost = val('m_opCost');
+        const m_totalRelevant =
+          m_varTotal +
+          m_fixedAvoidable +
+          val('m_rent') +
+          val('m_depreciation') +
+          m_opCost;
+        const m_totalAll = m_varTotal + m_fixedTotal + m_opCost;
+        const m_unitCost = m_totalAll / vol;
+        const m_unavoidable = val('m_unavoidable');
+
+        // BUY costs
+        const b_varUnit =
+          val('b_unitPrice') +
+          val('b_freight') +
+          val('b_inspection') +
+          val('b_handling');
+        const b_varTotal = b_varUnit * vol;
+        const b_fixedRemain = val('b_fixedRemain');
+        const b_savings = val('b_savings');
+        const b_totalRelevant =
+          b_varTotal + b_fixedRemain - b_savings + m_unavoidable;
+        const b_unitCost = b_varUnit + b_fixedRemain / vol;
+
+        // Relevant cost comparison
+        const diff = m_totalRelevant - b_totalRelevant;
+        const winner = diff > 0 ? 'BUY' : diff < 0 ? 'MAKE' : 'TIE';
+        const saving = Math.abs(diff);
+
+        // Break-even volume
+        // FC_make - FC_buy = (VC_buy - VC_make) * vol
+        const fc_make =
+          m_fixedAvoidable + val('m_rent') + val('m_depreciation') + m_opCost;
+        const fc_buy = b_fixedRemain - b_savings + m_unavoidable;
+        const vc_diff = b_varUnit - m_varUnit;
+        const bep_vol = vc_diff !== 0 ? (fc_buy - fc_make) / vc_diff : null;
+
+        // Sensitivity
+        const volumes = [vol * 0.5, vol * 0.75, vol, vol * 1.25, vol * 1.5];
+
+        renderResults({
+          name,
+          vol,
+          winner,
+          saving,
+          diff,
+          m_varUnit,
+          m_varTotal,
+          m_fixedTotal,
+          m_opCost,
+          m_totalRelevant,
+          m_totalAll,
+          m_unitCost,
+          b_varUnit,
+          b_varTotal,
+          b_fixedRemain,
+          b_savings,
+          b_totalRelevant,
+          b_unitCost,
+          m_unavoidable,
+          fc_make,
+          fc_buy,
+          bep_vol,
+          volumes,
+          m_directMat: val('m_directMat'),
+          m_directLabor: val('m_directLabor'),
+          m_varOverhead: val('m_varOverhead'),
+          m_varOther: val('m_varOther'),
+          m_fixedLabor: val('m_fixedLabor'),
+          m_fixedOther: val('m_fixedOther'),
+          m_depreciation: val('m_depreciation'),
+          m_rent: val('m_rent'),
+          b_unitPrice: val('b_unitPrice'),
+          b_freight: val('b_freight'),
+          b_inspection: val('b_inspection'),
+          b_handling: val('b_handling'),
+        });
+      }
+
+      function renderResults(d) {
+        const winnerClass =
+          d.winner === 'MAKE'
+            ? 'make-win'
+            : d.winner === 'BUY'
+            ? 'buy-win'
+            : 'tie';
+        const winnerTH =
+          d.winner === 'MAKE'
+            ? '✅ ผลิตเอง (MAKE)'
+            : d.winner === 'BUY'
+            ? '✅ ซื้อภายนอก (BUY)'
+            : '⚖️ เท่ากัน (TIE)';
+        const savingLabel =
+          d.winner === 'TIE'
+            ? 'ต้นทุนเท่ากัน'
+            : `ประหยัดกว่า ฿${fmt(d.saving)}`;
+
+        // Sensitivity rows
+        let senRows = '';
+        d.volumes.forEach((v) => {
+          const mk = d.m_varUnit * v + d.fc_make;
+          const bk = d.b_varUnit * v + d.fc_buy;
+          const w = mk < bk ? 'make' : bk < mk ? 'buy' : 'tie';
+          const diff2 = mk - bk;
+          const v_str = fmtInt(v);
+          senRows += `<tr>
+      <td class="col-vol">${v_str}</td>
+      <td class="${w === 'make' ? 'hl-best' : ''}">${fmt(mk)}</td>
+      <td class="${w === 'buy' ? 'hl-best' : ''}">${fmt(bk)}</td>
+      <td style="font-weight:700;color:${diff2 > 0 ? '#e91e63' : '#1976d2'}">${
+            diff2 > 0 ? 'BUY ดีกว่า' : 'MAKE ดีกว่า'
+          } ฿${fmt(Math.abs(diff2))}</td>
+    </tr>`;
+        });
+
+        const bepText =
+          d.bep_vol !== null && d.bep_vol > 0
+            ? `<b>Break-even Volume:</b> ${fmtInt(
+                d.bep_vol
+              )} หน่วย — ผลิตมากกว่านี้ควรผลิตเอง, น้อยกว่านี้ควรซื้อ`
+            : d.bep_vol !== null && d.bep_vol <= 0
+            ? '<b>Break-even Volume:</b> ที่ทุกระดับ MAKE ดีกว่าเสมอ (VC Make < VC Buy มาก)'
+            : '<b>Break-even Volume:</b> ไม่สามารถคำนวณได้ (ต้นทุนผันแปรเท่ากัน)';
+
+        document.getElementById('rightCol').innerHTML = `
+
+    <!-- RESULT BANNER -->
+    <div class="result-banner ${winnerClass}">
+      <div style="flex:1">
+        <div style="font-size:0.8rem;opacity:0.8;margin-bottom:4px">คำแนะนำสำหรับ: ${
+          d.name
+        }</div>
+        <div class="verdict">${winnerTH}</div>
+        <div class="sub">ปริมาณผลิต ${fmtInt(
+          d.vol
+        )} หน่วย/ปี | วิเคราะห์บน Relevant Cost</div>
+      </div>
+      <div class="saving">
+        <div class="amt">฿${fmt(d.saving)}</div>
+        <div class="lbl">${savingLabel}</div>
+      </div>
+      <div class="saving">
+        <div class="amt" style="font-size:1rem">฿${fmt(d.m_unitCost)}</div>
+        <div class="lbl">ต้นทุน/หน่วย Make</div>
+      </div>
+      <div class="saving">
+        <div class="amt" style="font-size:1rem">฿${fmt(d.b_varUnit)}</div>
+        <div class="lbl">ต้นทุน/หน่วย Buy</div>
+      </div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="metrics-grid">
+      <div class="metric-card m1">
+        <div class="metric-val make">฿${fmt(d.m_totalRelevant)}</div>
+        <div class="metric-lbl">Relevant Cost (Make)</div>
+      </div>
+      <div class="metric-card m2">
+        <div class="metric-val buy">฿${fmt(d.b_totalRelevant)}</div>
+        <div class="metric-lbl">Relevant Cost (Buy)</div>
+      </div>
+      <div class="metric-card m3">
+        <div class="metric-val purple">${
+          d.bep_vol !== null && d.bep_vol > 0 ? fmtInt(d.bep_vol) : 'N/A'
+        }</div>
+        <div class="metric-lbl">Break-even (หน่วย)</div>
+      </div>
+      <div class="metric-card m4">
+        <div class="metric-val green">${fmt(
+          (d.saving / Math.max(d.m_totalRelevant, d.b_totalRelevant)) * 100
+        )}%</div>
+        <div class="metric-lbl">ส่วนต่างต้นทุน (%)</div>
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-grid">
+      <div class="chart-box">
+        <h4>📊 เปรียบเทียบ Relevant Cost รวม</h4>
+        <canvas id="chart1"></canvas>
+      </div>
+      <div class="chart-box">
+        <h4>🥧 โครงสร้างต้นทุน Make</h4>
+        <canvas id="chart2"></canvas>
+      </div>
+      <div class="chart-box">
+        <h4>📈 Break-even Analysis</h4>
+        <canvas id="chart3"></canvas>
+      </div>
+    </div>
+
+    <!-- COST TABLE -->
+    <div class="panel">
+      <div class="panel-header gold">📋 ตารางวิเคราะห์ต้นทุนที่เกี่ยวข้อง (Relevant Cost Analysis)</div>
+      <div class="panel-body">
+        <table class="cost-table">
+          <thead>
+            <tr>
+              <th>รายการต้นทุน</th>
+              <th>Make (บาท)</th>
+              <th>Buy (บาท)</th>
+              <th>ผลต่าง (M-B)</th>
+              <th>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>วัตถุดิบทางตรง</td>
+              <td class="make-c">${fmt(d.m_directMat * d.vol)}</td>
+              <td>-</td>
+              <td>${fmt(d.m_directMat * d.vol)}</td>
+              <td><span class="tag-relevant">เกี่ยวข้อง</span></td>
+            </tr>
+            <tr>
+              <td>แรงงานทางตรง</td>
+              <td class="make-c">${fmt(d.m_directLabor * d.vol)}</td>
+              <td>-</td>
+              <td>${fmt(d.m_directLabor * d.vol)}</td>
+              <td><span class="tag-relevant">เกี่ยวข้อง</span></td>
+            </tr>
+            <tr>
+              <td>โอเวอร์เฮดผันแปร</td>
+              <td class="make-c">${fmt(d.m_varOverhead * d.vol)}</td>
+              <td>-</td>
+              <td>${fmt(d.m_varOverhead * d.vol)}</td>
+              <td><span class="tag-relevant">เกี่ยวข้อง</span></td>
+            </tr>
+            <tr>
+              <td>ต้นทุนผันแปรอื่น</td>
+              <td class="make-c">${fmt(d.m_varOther * d.vol)}</td>
+              <td>-</td>
+              <td>${fmt(d.m_varOther * d.vol)}</td>
+              <td><span class="tag-relevant">เกี่ยวข้อง</span></td>
+            </tr>
+            <tr>
+              <td>ค่าเสื่อมราคา (Avoidable)</td>
+              <td class="make-c">${fmt(d.m_depreciation)}</td>
+              <td>-</td>
+              <td>${fmt(d.m_depreciation)}</td>
+              <td><span class="tag-relevant">เกี่ยวข้อง</span></td>
+            </tr>
+            <tr>
+              <td>ค่าเช่า/สาธารณูปโภค</td>
+              <td class="make-c">${fmt(d.m_rent)}</td>
+              <td>-</td>
+              <td>${fmt(d.m_rent)}</td>
+              <td><span class="tag-relevant">เกี่ยวข้อง</span></td>
+            </tr>
+            <tr>
+              <td>เงินเดือน (Avoidable)</td>
+              <td class="make-c">${fmt(d.m_fixedLabor)}</td>
+              <td>-</td>
+              <td>${fmt(d.m_fixedLabor)}</td>
+              <td><span class="tag-relevant">เกี่ยวข้อง</span></td>
+            </tr>
+            <tr>
+              <td>ต้นทุนคงที่ Unavoidable</td>
+              <td class="make-c">${fmt(d.m_unavoidable)}</td>
+              <td class="buy-c">${fmt(d.m_unavoidable)}</td>
+              <td>0</td>
+              <td><span class="tag-irrelevant">ไม่เกี่ยวข้อง</span></td>
+            </tr>
+            <tr>
+              <td>ราคาซื้อ + ต้นทุนการซื้อ</td>
+              <td>-</td>
+              <td class="buy-c">${fmt(d.b_varTotal)}</td>
+              <td>${fmt(-d.b_varTotal)}</td>
+              <td><span class="tag-relevant">เกี่ยวข้อง</span></td>
+            </tr>
+            <tr>
+              <td>ต้นทุนคงที่คงเหลือ (Buy)</td>
+              <td>-</td>
+              <td class="buy-c">${fmt(d.b_fixedRemain)}</td>
+              <td>${fmt(-d.b_fixedRemain)}</td>
+              <td><span class="tag-relevant">เกี่ยวข้อง</span></td>
+            </tr>
+            <tr>
+              <td>ค่าเสียโอกาส (Make)</td>
+              <td class="make-c">${fmt(d.m_opCost)}</td>
+              <td>-</td>
+              <td>${fmt(d.m_opCost)}</td>
+              <td><span class="tag-relevant">เกี่ยวข้อง</span></td>
+            </tr>
+            <tr>
+              <td>Savings หากซื้อ</td>
+              <td>-</td>
+              <td style="color:#388e3c">-${fmt(d.b_savings)}</td>
+              <td>${fmt(d.b_savings)}</td>
+              <td><span class="tag-relevant">เกี่ยวข้อง</span></td>
+            </tr>
+            <tr style="background:#f5f7fa">
+              <td><b>รวม Relevant Cost</b></td>
+              <td><b class="make-c">฿${fmt(d.m_totalRelevant)}</b></td>
+              <td><b class="buy-c">฿${fmt(d.b_totalRelevant)}</b></td>
+              <td style="font-weight:800;color:${
+                d.diff > 0 ? '#e91e63' : '#1976d2'
+              }">฿${fmt(d.diff)} (${d.winner})</td>
+              <td><b>${d.winner === 'MAKE' ? '✅ MAKE' : '✅ BUY'}</b></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SENSITIVITY -->
+    <div class="panel">
+      <div class="panel-header purple">📉 การวิเคราะห์ความอ่อนไหว (Sensitivity Analysis)</div>
+      <div class="panel-body">
+        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:10px">${bepText}</p>
+        <table class="sensitivity-table">
+          <thead>
+            <tr>
+              <th>ปริมาณผลิต (หน่วย)</th>
+              <th>Total Cost Make (฿)</th>
+              <th>Total Cost Buy (฿)</th>
+              <th>คำแนะนำ</th>
+            </tr>
+          </thead>
+          <tbody>${senRows}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STRATEGIC + WEIGHTED SCORE -->
+    <div class="panel">
+      <div class="panel-header purple">🎯 การวิเคราะห์เชิงกลยุทธ์และคะแนนถ่วงน้ำหนัก (Weighted Score Analysis)</div>
+      <div class="panel-body">
+        <div class="strategic-grid">
+          <div>
+            <p style="font-size:0.8rem;color:var(--muted);margin-bottom:12px">ให้คะแนน 1-10 สำหรับแต่ละปัจจัย และปรับน้ำหนักตามความสำคัญ</p>
+            <table class="criteria-table" id="stratTable">
+              <thead>
+                <tr>
+                  <th>ปัจจัยเชิงกลยุทธ์</th>
+                  <th>น้ำหนัก%</th>
+                  <th>Make (1-10)</th>
+                  <th>Buy (1-10)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${buildStratRows()}
+              </tbody>
+            </table>
+            <button class="btn btn-primary" style="margin-top:12px" onclick="calcWeighted()">คำนวณคะแนนถ่วงน้ำหนัก</button>
+          </div>
+          <div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+              <div class="score-result make-score" id="makeScoreBox">
+                <div style="font-size:0.8rem;color:#555;margin-bottom:4px">คะแนน MAKE</div>
+                <div class="big" id="makeScore">-</div>
+                <div style="font-size:0.75rem;color:#555;margin-top:4px">/10 คะแนน</div>
+              </div>
+              <div class="score-result buy-score" id="buyScoreBox">
+                <div style="font-size:0.8rem;color:#555;margin-bottom:4px">คะแนน BUY</div>
+                <div class="big" id="buyScore">-</div>
+                <div style="font-size:0.75rem;color:#555;margin-top:4px">/10 คะแนน</div>
+              </div>
+            </div>
+            <canvas id="chart4" style="max-height:220px"></canvas>
+          </div>
+        </div>
+
+        <!-- Recommendation -->
+        <div id="recommendationBox" style="margin-top:16px"></div>
+      </div>
+    </div>
+  `;
+
+        // Draw charts
+        drawChart1(d);
+        drawChart2(d);
+        drawChart3(d);
+      }
+
+      const stratCriteria = [
+        { label: 'คุณภาพการผลิต', weight: 20, makeDefault: 8, buyDefault: 7 },
+        {
+          label: 'ความสามารถหลัก (Core Competency)',
+          weight: 20,
+          makeDefault: 9,
+          buyDefault: 5,
+        },
+        {
+          label: 'ความเสี่ยงซัพพลายเชน',
+          weight: 15,
+          makeDefault: 8,
+          buyDefault: 5,
+        },
+        {
+          label: 'ความยืดหยุ่น/ปรับตัว',
+          weight: 15,
+          makeDefault: 9,
+          buyDefault: 6,
+        },
+        {
+          label: 'เทคโนโลยี/ทรัพย์สินทางปัญญา',
+          weight: 15,
+          makeDefault: 8,
+          buyDefault: 4,
+        },
+        {
+          label: 'ความสัมพันธ์ซัพพลายเออร์',
+          weight: 10,
+          makeDefault: 5,
+          buyDefault: 8,
+        },
+        { label: 'ความยั่งยืน/ESG', weight: 5, makeDefault: 7, buyDefault: 6 },
+      ];
+
+      function buildStratRows() {
+        return stratCriteria
+          .map(
+            (c, i) => `
+    <tr>
+      <td>${c.label}</td>
+      <td><input type="number" id="sw_${i}" value="${c.weight}" min="0" max="100" style="width:50px;border:1px solid #dde3ea;border-radius:4px;padding:3px 5px;font-size:0.78rem" oninput="syncWeights()" /></td>
+      <td>
+        <input type="range" id="sm_${i}" min="1" max="10" value="${c.makeDefault}" oninput="document.getElementById('smv_${i}').textContent=this.value" />
+        <span id="smv_${i}" style="font-size:0.78rem;font-weight:700;color:var(--make)">${c.makeDefault}</span>
+      </td>
+      <td>
+        <input type="range" id="sb_${i}" min="1" max="10" value="${c.buyDefault}" oninput="document.getElementById('sbv_${i}').textContent=this.value" />
+        <span id="sbv_${i}" style="font-size:0.78rem;font-weight:700;color:var(--buy)">${c.buyDefault}</span>
+      </td>
+    </tr>
+  `
+          )
+          .join('');
+      }
+
+      function syncWeights() {
+        let total = 0;
+        stratCriteria.forEach((c, i) => {
+          total +=
+            parseFloat(document.getElementById('sw_' + i)?.value || c.weight) ||
+            0;
+        });
+        // optional: show total
+      }
+
+      function calcWeighted() {
+        let makeScore = 0,
+          buyScore = 0,
+          totalW = 0;
+        const data = { labels: [], make: [], buy: [] };
+
+        stratCriteria.forEach((c, i) => {
+          const w =
+            parseFloat(document.getElementById('sw_' + i)?.value || c.weight) ||
+            0;
+          const m =
+            parseFloat(
+              document.getElementById('sm_' + i)?.value || c.makeDefault
+            ) || 0;
+          const b =
+            parseFloat(
+              document.getElementById('sb_' + i)?.value || c.buyDefault
+            ) || 0;
+          makeScore += m * w;
+          buyScore += b * w;
+          totalW += w;
+          data.labels.push(c.label);
+          data.make.push(m);
+          data.buy.push(b);
+        });
+
+        const mFinal = totalW > 0 ? makeScore / totalW : 0;
+        const bFinal = totalW > 0 ? buyScore / totalW : 0;
+
+        document.getElementById('makeScore').textContent = mFinal.toFixed(2);
+        document.getElementById('buyScore').textContent = bFinal.toFixed(2);
+
+        drawChart4(data);
+
+        const stratWinner =
+          mFinal > bFinal ? 'MAKE' : bFinal > mFinal ? 'BUY' : 'TIE';
+        const stratWinnerTH =
+          stratWinner === 'MAKE'
+            ? 'ผลิตเอง (MAKE)'
+            : stratWinner === 'BUY'
+            ? 'ซื้อภายนอก (BUY)'
+            : 'เท่ากัน';
+        const recClass = stratWinner === 'MAKE' ? 'make-rec' : 'buy-rec';
+
+        const makePoints = [
+          'ควบคุมคุณภาพการผลิตได้โดยตรง',
+          'รักษาความสามารถหลักขององค์กร',
+          'ลดความเสี่ยงจากการพึ่งพาซัพพลายเออร์',
+          'สร้างความยืดหยุ่นในการปรับปริมาณผลิต',
+          'ปกป้องทรัพย์สินทางปัญญาและความลับทางการค้า',
+        ];
+        const buyPoints = [
+          'ประหยัดต้นทุนด้านทุนและอุปกรณ์การผลิต',
+          'ใช้ความเชี่ยวชาญของผู้ผลิตเฉพาะทาง',
+          'ลดภาระการบริหารจัดการกำลังการผลิต',
+          'มีความยืดหยุ่นต่อการเปลี่ยนแปลงเทคโนโลยี',
+          'โฟกัสทรัพยากรไปที่ Core Business',
+        ];
+
+        document.getElementById('recommendationBox').innerHTML = `
+    <div class="recommendation-box ${recClass}">
+      <h4>${
+        stratWinner === 'MAKE' ? '🏭' : '🛒'
+      } คำแนะนำเชิงกลยุทธ์: ${stratWinnerTH} (คะแนน MAKE: ${mFinal.toFixed(
+          2
+        )} | BUY: ${bFinal.toFixed(2)})</h4>
+      <ul>
+        ${(stratWinner === 'MAKE' ? makePoints : buyPoints)
+          .map((p) => `<li>${p}</li>`)
+          .join('')}
+      </ul>
+      <p style="margin-top:10px;font-size:0.8rem;color:#555">
+        <b>หมายเหตุ:</b> ผลลัพธ์นี้ประกอบจากคะแนนเชิงปริมาณ (ต้นทุน) และคุณภาพเชิงกลยุทธ์ โปรดพิจารณาร่วมกับบริบทขององค์กร
+      </p>
+    </div>
+  `;
+      }
+
+      function drawChart1(d) {
+        if (charts.c1) charts.c1.destroy();
+        const ctx = document.getElementById('chart1').getContext('2d');
+        charts.c1 = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Make', 'Buy'],
+            datasets: [
+              {
+                label: 'Relevant Cost (฿)',
+                data: [d.m_totalRelevant, d.b_totalRelevant],
+                backgroundColor: [
+                  'rgba(33,150,243,0.85)',
+                  'rgba(233,30,99,0.85)',
+                ],
+                borderRadius: 8,
+                borderWidth: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: (ctx) => '฿' + fmt(ctx.raw) } },
+            },
+            scales: { y: { ticks: { callback: (v) => '฿' + fmtInt(v) } } },
+          },
+        });
+      }
+
+      function drawChart2(d) {
+        if (charts.c2) charts.c2.destroy();
+        const ctx = document.getElementById('chart2').getContext('2d');
+        charts.c2 = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: [
+              'วัตถุดิบทางตรง',
+              'แรงงานทางตรง',
+              'โอเวอร์เฮดผันแปร',
+              'ต้นทุนผันแปรอื่น',
+              'ต้นทุนคงที่',
+              'ค่าเสียโอกาส',
+            ],
+            datasets: [
+              {
+                data: [
+                  d.m_directMat * d.vol,
+                  d.m_directLabor * d.vol,
+                  d.m_varOverhead * d.vol,
+                  d.m_varOther * d.vol,
+                  d.m_fixedTotal,
+                  d.m_opCost,
+                ],
+                backgroundColor: [
+                  '#1976d2',
+                  '#42a5f5',
+                  '#90caf9',
+                  '#bbdefb',
+                  '#0d47a1',
+                  '#e3f2fd',
+                ],
+                borderWidth: 2,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { font: { size: 10 }, boxWidth: 12 },
+              },
+            },
+          },
+        });
+      }
+
+      function drawChart3(d) {
+        if (charts.c3) charts.c3.destroy();
+        const ctx = document.getElementById('chart3').getContext('2d');
+        const maxV = d.vol * 2;
+        const points = Array.from({ length: 20 }, (_, i) =>
+          Math.round(((i + 1) * maxV) / 20)
+        );
+        const makeData = points.map((v) => d.m_varUnit * v + d.fc_make);
+        const buyData = points.map((v) => d.b_varUnit * v + d.fc_buy);
+        charts.c3 = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: points.map((v) => fmtInt(v)),
+            datasets: [
+              {
+                label: 'Make',
+                data: makeData,
+                borderColor: '#2196f3',
+                backgroundColor: 'rgba(33,150,243,0.08)',
+                tension: 0.3,
+                borderWidth: 2,
+                pointRadius: 0,
+              },
+              {
+                label: 'Buy',
+                data: buyData,
+                borderColor: '#e91e63',
+                backgroundColor: 'rgba(233,30,99,0.08)',
+                tension: 0.3,
+                borderWidth: 2,
+                pointRadius: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { font: { size: 10 }, boxWidth: 12 },
+              },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.dataset.label}: ฿${fmt(ctx.raw)}`,
+                },
+              },
+            },
+            scales: {
+              x: { ticks: { maxTicksLimit: 6, font: { size: 9 } } },
+              y: {
+                ticks: { callback: (v) => '฿' + fmtInt(v), font: { size: 9 } },
+              },
+            },
+          },
+        });
+      }
+
+      function drawChart4(data) {
+        if (charts.c4) charts.c4.destroy();
+        const ctx = document.getElementById('chart4').getContext('2d');
+        charts.c4 = new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels: data.labels.map((l) =>
+              l.length > 12 ? l.substring(0, 12) + '...' : l
+            ),
+            datasets: [
+              {
+                label: 'Make',
+                data: data.make,
+                borderColor: '#2196f3',
+                backgroundColor: 'rgba(33,150,243,0.15)',
+                borderWidth: 2,
+                pointRadius: 3,
+              },
+              {
+                label: 'Buy',
+                data: data.buy,
+                borderColor: '#e91e63',
+                backgroundColor: 'rgba(233,30,99,0.15)',
+                borderWidth: 2,
+                pointRadius: 3,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              r: {
+                min: 0,
+                max: 10,
+                ticks: { stepSize: 2, font: { size: 9 } },
+                pointLabels: { font: { size: 9 } },
+              },
+            },
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { font: { size: 10 }, boxWidth: 12 },
+              },
+            },
+          },
+        });
+      }
+
+      function resetForm() {
+        const defaults = {
+          productName: 'ชิ้นส่วน A',
+          volume: 50000,
+          m_directMat: 45,
+          m_directLabor: 30,
+          m_varOverhead: 15,
+          m_varOther: 5,
+          m_depreciation: 500000,
+          m_rent: 300000,
+          m_fixedLabor: 400000,
+          m_fixedOther: 100000,
+          m_unavoidable: 200000,
+          m_opCost: 150000,
+          b_unitPrice: 120,
+          b_freight: 5,
+          b_inspection: 2,
+          b_handling: 3,
+          b_fixedRemain: 200000,
+          b_savings: 50000,
+        };
+        Object.entries(defaults).forEach(([k, v]) => {
+          if (document.getElementById(k)) document.getElementById(k).value = v;
+        });
+        document.getElementById(
+          'rightCol'
+        ).innerHTML = `<div class="panel" style="padding:40px;text-align:center;"><div class="placeholder"><div class="big-icon">📋</div><p style="margin-top:12px;font-weight:600;color:#1a3a5c;">กรอกข้อมูลและกด "วิเคราะห์ Make or Buy"</p></div></div>`;
+      }
+
+      // Auto-calculate on load
+      window.onload = () => calculate();
+    </script>
+  </body>
+</html>
